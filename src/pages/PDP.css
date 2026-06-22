@@ -1,0 +1,97 @@
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 32px;
+}
+
+.back-link:hover {
+  color: var(--accent-primary);
+  transform: translateX(-4px);
+}
+
+.pdp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pdp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pdp-image-container {
+  width: 100%;
+  border-radius: var(--border-radius-xl);
+  overflow: hidden;
+  padding: 16px;
+}
+
+.pdp-image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-lg);
+  display: block;
+}
+
+.pdp-info-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.pdp-title {
+  font-size: 3rem;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.pdp-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 32px;
+}
+
+.pdp-description-box {
+  padding: 24px;
+  margin-bottom: 40px;
+}
+
+.pdp-description-box h3 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.pdp-description {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+
+.pdp-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pdp-btn-main {
+  flex: 2;
+  font-size: 1.1rem;
+  padding: 16px;
+}
+
+.pdp-btn-wishlist {
+  flex: 1;
+  font-size: 1.1rem;
+}
+
+.pdp-btn-wishlist.active {
+  border-color: var(--error);
+  color: var(--error);
+}
