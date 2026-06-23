@@ -1,104 +1,199 @@
-.navbar {
-  position: fixed;
+.navbar-wrapper {
+  font-family: 'Inter', sans-serif;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  height: var(--nav-height);
-  background: rgba(10, 10, 12, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-color);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
+  z-index: 100;
+  background: white;
 }
 
-.navbar-container {
+.top-banner {
+  background: linear-gradient(90deg, #f472b6 0%, #fb923c 50%, #f43f5e 100%);
+  color: white;
+  font-size: 0.85rem;
+  padding: 8px 0;
+}
+
+.top-banner-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
 }
 
-.navbar-logo {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.05em;
+.banner-text {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.top-banner-right {
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.banner-link {
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.banner-link:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  opacity: 0.5;
+}
+
+.main-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 0;
+}
+
+.main-header-inner {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.logo-suffix {
-  color: var(--text-primary);
-  margin-left: 2px;
-}
-
-.navbar-links {
+.header-left {
   display: flex;
+  align-items: center;
   gap: 32px;
 }
 
-.nav-link {
+.nykaa-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fc2779; /* Nykaa pink */
+  letter-spacing: -1px;
+  font-style: italic;
+}
+
+.primary-nav {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-weight: 500;
+  list-style: none;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.primary-nav a {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 600;
   font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.primary-nav a:hover {
+  color: #fc2779;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 4px;
   padding: 8px 12px;
-  border-radius: var(--border-radius-sm);
-  transition: all 0.2s ease;
+  width: 300px;
 }
 
-.nav-link:hover, .nav-link.active {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+.search-icon {
+  color: #64748b;
+  margin-right: 8px;
 }
 
-.nav-link.active {
-  color: var(--accent-primary);
+.search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 0.9rem;
 }
 
-.navbar-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.nav-action-btn {
-  position: relative;
-  color: var(--text-secondary);
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-}
-
-.nav-action-btn:hover {
-  color: var(--accent-primary);
-  border-color: var(--accent-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-}
-
-.badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--accent-gradient);
+.sign-in-btn {
+  background: #fc2779;
   color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sign-in-btn:hover {
+  background: #e11d68;
+}
+
+.cart-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: #334155;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #fc2779;
+  color: white;
+  font-size: 0.75rem;
   width: 18px;
   height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 2px solid var(--bg-primary);
+  font-weight: bold;
+}
+
+.sub-header {
+  padding: 12px 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.secondary-nav {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.secondary-nav a {
+  text-decoration: none;
+  color: #64748b;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.secondary-nav a:hover {
+  color: #fc2779;
+}
+
+.offers-link {
+  color: #fc2779 !important;
+  font-weight: 600;
+}
+
+/* Container Utility (assuming it's in index.css but ensuring here) */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }

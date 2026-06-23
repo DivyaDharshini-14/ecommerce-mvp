@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import PLP from './pages/PLP';
@@ -6,8 +7,20 @@ import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
 import AdminProductAdd from './pages/AdminProductAdd';
 import EmailJobForm from './pages/EmailJobForm';
+import CartSidebar from './components/CartSidebar';
+import AuthModal from './components/AuthModal';
+import { useAuthStore } from './store/authStore';
+import { useDataStore } from './store/dataStore';
 
 function App() {
+  const { initializeAuth } = useAuthStore();
+  const { fetchFilterData } = useDataStore();
+
+  useEffect(() => {
+    initializeAuth();
+    fetchFilterData();
+  }, [initializeAuth, fetchFilterData]);
+
   return (
     <>
       <Navbar />
@@ -21,6 +34,8 @@ function App() {
           <Route path="/careers" element={<EmailJobForm />} />
         </Routes>
       </main>
+      <CartSidebar />
+      <AuthModal />
     </>
   );
 }

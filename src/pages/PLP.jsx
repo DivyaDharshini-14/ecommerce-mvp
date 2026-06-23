@@ -1,103 +1,180 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useCartStore } from '../store/cartStore';
-import { useWishlistStore } from '../store/wishlistStore';
-import toast from 'react-hot-toast';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { useDataStore } from '../store/dataStore';
+import ProductCard from '../components/ProductCard';
 import './PLP.css';
 
 const PLP = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCartStore();
-  const { addToWishlist, removeFromWishlist, wishlist } = useWishlistStore();
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+
+  // Filter states
+  const { brands } = useDataStore();
+  const [sortBy, setSortBy] = useState('popularity');
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedRatings, setSelectedRatings] = useState([]);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [sortBy, selectedBrands, selectedRatings, categoryParam]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('products').select('*');
 
+      // Apply Filters
+      if (categoryParam) {
+        query = query.eq('category', categoryParam);
+      }
+
+      if (selectedBrands.length > 0) {
+        query = query.in('brand', selectedBrands);
+      }
+      
+      if (selectedRatings.length > 0) {
+        // Simple implementation: if they select '4 Stars & Above', filter rating >= 4
+        const minRating = Math.min(...selectedRatings);
+        query = query.gte('rating', minRating);
+      }
+
+      // Apply Sorting
+      if (sortBy === 'price_low') query = query.order('price', { ascending: true });
+      else if (sortBy === 'price_high') query = query.order('price', { ascending: false });
+      else if (sortBy === 'discount') query = query.order('discount_percentage', { ascending: false });
+      else query = query.order('created_at', { ascending: false }); // Default/Popularity
+
+      const { data, error } = await query;
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
-      // Fallback dummy data if Supabase isn't set up yet
-      setProducts([
-        { id: 1, title: 'Premium Wireless Headphones', price: 299.99, image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800', description: 'High-fidelity audio with active noise cancellation.' },
-        { id: 2, title: 'Minimalist Smartwatch', price: 199.50, image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800', description: 'Track your fitness in style.' },
-        { id: 3, title: 'Mechanical Keyboard', price: 149.00, image_url: 'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800', description: 'Tactile switches for the best typing experience.' },
-        { id: 4, title: 'Ergonomic Mouse', price: 89.99, image_url: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&q=80&w=800', description: 'Comfortable design for long hours of work.' },
-      ]);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddToCart = (e, product) => {
-    e.preventDefault();
-    addToCart(product);
-    toast.success(`${product.title} added to cart!`);
-  };
-
-  const handleToggleWishlist = (e, product) => {
-    e.preventDefault();
-    const isWishlisted = wishlist.some(item => item.id === product.id);
-    if (isWishlisted) {
-      removeFromWishlist(product.id);
-      toast.success('Removed from wishlist');
-    } else {
-      addToWishlist(product);
-      toast.success('Added to wishlist');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="container" style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}>
-        <div className="loader"></div>
-      </div>
+  const toggleBrand = (brand) => {
+    setSelectedBrands(prev => 
+      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
     );
-  }
+  };
+
+  const toggleRating = (rating) => {
+    setSelectedRatings(prev => 
+      prev.includes(rating) ? prev.filter(r => r !== rating) : [...prev, rating]
+    );
+  };
 
   return (
-    <div className="container animate-fade-in">
-      <div className="plp-header">
-        <h1 className="gradient-text">New Arrivals</h1>
-        <p className="subtitle">Discover our latest collection of premium gear.</p>
+    <div className="plp-page">
+      {/* Breadcrumb / Title Area */}
+      <div className="plp-header-area">
+        <div className="container">
+          <div className="breadcrumb">
+            <Link to="/">Home</Link>
+            {categoryParam && (
+              <>
+                 {' > '}
+                 <Link to={`/?category=${encodeURIComponent(categoryParam)}`}>{categoryParam}</Link>
+              </>
+            )}
+            {' > '}
+            <span className="current">All Products</span>
+          </div>
+          <h1 className="category-title">{categoryParam || 'All Products'} <span className="product-count">({products.length})</span></h1>
+        </div>
       </div>
 
-      <div className="product-grid">
-        {products.map((product) => {
-          const isWishlisted = wishlist.some(item => item.id === product.id);
-          return (
-            <Link to={`/product/${product.id}`} key={product.id} className="product-card glass-panel">
-              <div className="product-image-container">
-                <img src={product.image_url} alt={product.title} className="product-image" loading="lazy" />
-                <button 
-                  className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
-                  onClick={(e) => handleToggleWishlist(e, product)}
-                >
-                  <Heart fill={isWishlisted ? 'var(--error)' : 'none'} color={isWishlisted ? 'var(--error)' : 'currentColor'} />
-                </button>
-              </div>
-              <div className="product-info">
-                <h3 className="product-title">{product.title}</h3>
-                <p className="product-price">${product.price.toFixed(2)}</p>
-                <button className="btn-primary add-to-cart-btn" onClick={(e) => handleAddToCart(e, product)}>
-                  <ShoppingCart size={18} /> Add to Cart
-                </button>
-              </div>
-            </Link>
-          );
-        })}
+      <div className="container plp-layout">
+        {/* Left Sidebar Filters */}
+        <aside className="plp-sidebar">
+          {/* Sort By */}
+          <div className="filter-group">
+            <h3 className="filter-title">Sort By</h3>
+            <select 
+              className="sort-select" 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="popularity">Popularity</option>
+              <option value="discount">Discount</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+            </select>
+          </div>
+
+          {/* Brand Filter */}
+          <div className="filter-group">
+            <h3 className="filter-title">Brand</h3>
+            <div className="filter-options">
+              {brands && brands.length > 0 ? (
+                brands.map(brand => (
+                  <label key={brand} className="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedBrands.includes(brand)}
+                      onChange={() => toggleBrand(brand)}
+                    />
+                    {brand}
+                  </label>
+                ))
+              ) : (
+                <p style={{fontSize: '0.85rem', color: '#94a3b8'}}>No brands found</p>
+              )}
+            </div>
+          </div>
+
+          {/* Rating Filter */}
+          <div className="filter-group">
+            <h3 className="filter-title">Avg Customer Rating</h3>
+            <div className="filter-options">
+              {[4, 3, 2, 1].map(stars => (
+                <label key={stars} className="checkbox-label">
+                  <input 
+                    type="checkbox"
+                    checked={selectedRatings.includes(stars)}
+                    onChange={() => toggleRating(stars)}
+                  />
+                  {stars} Stars & Above
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <h3 className="filter-title">Price</h3>
+            <div className="filter-options">
+              {/* Dummy options to match UI */}
+              <label className="checkbox-label"><input type="checkbox" /> Under ₹500</label>
+              <label className="checkbox-label"><input type="checkbox" /> ₹500 - ₹1000</label>
+              <label className="checkbox-label"><input type="checkbox" /> ₹1000 - ₹2000</label>
+              <label className="checkbox-label"><input type="checkbox" /> Over ₹2000</label>
+            </div>
+          </div>
+        </aside>
+
+        {/* Right Main Content */}
+        <main className="plp-main">
+          {loading ? (
+            <div className="loader-container"><div className="loader"></div></div>
+          ) : products.length > 0 ? (
+            <div className="products-grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="no-products">
+              <h3>No products found.</h3>
+              <p>Try adjusting your filters or search criteria.</p>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
