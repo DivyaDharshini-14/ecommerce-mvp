@@ -1,27 +1,56 @@
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Search, Smartphone, MapPin, Gift, HelpCircle, LogOut } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  ShoppingBag, Search, Smartphone, MapPin, Gift, HelpCircle,
+  LogOut, Heart, User, X, ChevronDown, LayoutDashboard, Package
+} from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { useDataStore } from '../store/dataStore';
-import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { cart, toggleCart } = useCartStore();
-  const { user, openAuthModal, signOut } = useAuthStore();
-  const { categories } = useDataStore();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { cart, toggleCart }                  = useCartStore();
+  const { user, openAuthModal, signOut }      = useAuthStore();
+  const { brands }                            = useDataStore();
+  const navigate                              = useNavigate();
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showAccountMenu,   setShowAccountMenu]   = useState(false);
+  const accountMenuRef = useRef(null);
 
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0);
 
-  const handleAdminClick = (e) => {
-    e.preventDefault();
+  // Top 5 brands from Supabase (real-time from dataStore)
+  const topBrands = brands.slice(0, 5);
+
+  // Close account menu on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
+        setShowAccountMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleAccountClick = () => {
     if (user) {
-      navigate('/admin/add-product');
+      setShowAccountMenu(prev => !prev);
     } else {
-      openAuthModal();
+      openAuthModal('/admin/dashboard'); // redirect admin after login
     }
+  };
+
+  const handleAdminPortal = () => {
+    setShowAccountMenu(false);
+    navigate('/admin/dashboard');
+  };
+
+  const handleSignOut = () => {
+    setShowAccountMenu(false);
+    setShowLogoutConfirm(true);
   };
 
   return (
@@ -35,7 +64,7 @@ const Navbar = () => {
           <div className="top-banner-right">
             <Link to="#" className="banner-link"><Smartphone size={14} /> Get App</Link>
             <span className="divider">|</span>
-            <Link to="#" className="banner-link"><MapPin size={14} /> Store & Events</Link>
+            <Link to="#" className="banner-link"><MapPin size={14} /> Store &amp; Events</Link>
             <span className="divider">|</span>
             <Link to="#" className="banner-link"><Gift size={14} /> Gift Card</Link>
             <span className="divider">|</span>
@@ -52,36 +81,106 @@ const Navbar = () => {
               <span className="nykaa-text">Nova</span>
             </Link>
             <ul className="primary-nav">
-              <li><Link to="#">Categories</Link></li>
-              <li><Link to="#">Brands</Link></li>
-              <li><Link to="#">Luxe</Link></li>
-              <li><Link to="#">Nykaa Fashion</Link></li>
-              <li><Link to="#">Beauty Advice</Link></li>
-              <li><a href="#" onClick={handleAdminClick} style={{color: '#fc2779', cursor: 'pointer'}}>Admin</a></li>
+              <li><Link to="/">Categories</Link></li>
+              {/* Real-time top 5 brands */}
+              {topBrands.map(brand => (
+                <li key={brand}>
+                  <Link to={`/?brand=${encodeURIComponent(brand)}`}>{brand}</Link>
+                </li>
+              ))}
             </ul>
           </div>
-          
+
           <div className="header-right">
             <div className="search-bar">
               <Search size={18} className="search-icon" />
-              <input type="text" placeholder="Search on Nykaa" />
+              <input type="text" placeholder="Search on Nova" />
             </div>
-            {user ? (
-              <button className="sign-in-btn" onClick={signOut} title={user.email}>
-                <LogOut size={18} style={{marginRight: '5px'}}/> Sign out
+
+            {/* Account button with dropdown */}
+            <div className="account-wrapper" ref={accountMenuRef}>
+              <button
+                className="icon-btn"
+                onClick={handleAccountClick}
+                title={user ? 'My Account' : 'Sign In'}
+              >
+                <User size={24} />
+                <span className="icon-text">
+                  {user ? 'Account' : 'Sign In'}
+                </span>
+                {user && <ChevronDown size={14} style={{ marginLeft: 2 }} />}
               </button>
-            ) : (
-              <button className="sign-in-btn" onClick={openAuthModal}>Sign in</button>
-            )}
-            <button className="cart-btn" onClick={toggleCart}>
-              <ShoppingBag size={24} />
-              {cartItemsCount > 0 && <span className="cart-badge">{cartItemsCount}</span>}
+
+              {/* Dropdown — only when logged in */}
+              {showAccountMenu && user && (
+                <div className="account-dropdown">
+                  <div className="dropdown-user-info">
+                    <div className="dropdown-avatar">
+                      {user.email?.[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="dropdown-name">My Account</p>
+                      <p className="dropdown-email">{user.email}</p>
+                    </div>
+                  </div>
+                  <hr className="dropdown-divider" />
+                  <button className="dropdown-item" onClick={() => { setShowAccountMenu(false); navigate('/wishlist'); }}>
+                    <Heart size={16} /> Wishlist
+                  </button>
+                  <button className="dropdown-item" onClick={handleAdminPortal}>
+                    <LayoutDashboard size={16} /> Admin Portal
+                  </button>
+                  <button className="dropdown-item" onClick={() => { setShowAccountMenu(false); navigate('/admin/add-product'); }}>
+                    <Package size={16} /> Add Product
+                  </button>
+                  <hr className="dropdown-divider" />
+                  <button className="dropdown-item danger" onClick={handleSignOut}>
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button className="icon-btn" onClick={() => navigate('/wishlist')}>
+              <Heart size={24} />
+              <span className="icon-text">Wishlist</span>
+            </button>
+
+            <button className="icon-btn" onClick={toggleCart}>
+              <div className="icon-badge-wrapper">
+                <ShoppingBag size={24} />
+                {cartItemsCount > 0 && <span className="cart-badge">{cartItemsCount}</span>}
+              </div>
+              <span className="icon-text">Cart</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Sub Header Temporarily Removed */}
+      {/* Logout Confirmation Popup */}
+      {showLogoutConfirm && (
+        <div className="logout-overlay" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="logout-popup" onClick={(e) => e.stopPropagation()}>
+            <button className="logout-popup-close" onClick={() => setShowLogoutConfirm(false)}>
+              <X size={18} />
+            </button>
+            <div className="logout-popup-icon">
+              <LogOut size={32} color="#fc2779" />
+            </div>
+            <h3 className="logout-popup-title">Sign Out?</h3>
+            <p className="logout-popup-desc">Are you sure you want to sign out of your account?</p>
+            <div className="logout-popup-actions">
+              <button className="logout-cancel-btn" onClick={() => setShowLogoutConfirm(false)}>Cancel</button>
+              <button
+                className="logout-confirm-btn"
+                onClick={() => { signOut(); setShowLogoutConfirm(false); }}
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

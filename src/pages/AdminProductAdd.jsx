@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { Upload, PlusCircle, ArrowLeft } from 'lucide-react';
+import './AdminDashboard.css';
 import './AdminProductAdd.css';
 
 const AdminProductAdd = () => {
@@ -121,100 +122,134 @@ const AdminProductAdd = () => {
   };
 
   return (
-    <div className="admin-container">
-      <div className="admin-header">
-        <div style={{ marginBottom: '15px' }}>
-          <Link to="/" style={{ color: '#fc2779', display: 'inline-flex', alignItems: 'center', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}>
-            <ArrowLeft size={16} style={{ marginRight: '6px' }} /> Go to Home
-          </Link>
+    <div className="admin-dashboard">
+      {/* ── Sidebar ── */}
+      <aside className="admin-sidebar">
+        <div className="sidebar-header">
+          <h2>Nova Admin</h2>
         </div>
-        <h1>Add New Product</h1>
-        <p>Fill in the details to publish a new product to the catalog.</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="admin-form">
-        
-        {/* Top Row: Image & Basic Info */}
-        <div className="form-row-2">
-          {/* Image Upload */}
-          <div className="form-group">
-            <label>Product Image</label>
-            <div className="image-upload-box" onClick={() => document.getElementById('image-upload').click()}>
-              {imagePreview ? (
-                <img src={imagePreview} alt="Preview" />
-              ) : (
-                <div className="upload-placeholder">
-                  <Upload size={32} />
-                  <p>Click to upload image</p>
-                </div>
-              )}
-              <input 
-                type="file" id="image-upload" accept="image/*" 
-                style={{ display: 'none' }} onChange={handleImageChange}
-              />
-            </div>
-          </div>
-
-          <div className="basic-info-group">
-            <div className="form-group">
-              <label htmlFor="title">Product Title *</label>
-              <input type="text" id="title" name="title" value={productData.title} onChange={handleChange} required placeholder="e.g. Advanced Hair Growth Actives" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="brand">Brand</label>
-              <input type="text" id="brand" name="brand" value={productData.brand} onChange={handleChange} placeholder="e.g. Oziva" />
-            </div>
-            <div className="form-row-2">
-              <div className="form-group">
-                <label htmlFor="price">Price (₹) *</label>
-                <input type="number" id="price" name="price" value={productData.price} onChange={handleChange} required min="0" step="0.01" placeholder="2099" />
-              </div>
-              <div className="form-group">
-                <label htmlFor="discount_percentage">Discount (%)</label>
-                <input type="number" id="discount_percentage" name="discount_percentage" value={productData.discount_percentage} onChange={handleChange} min="0" max="100" step="1" placeholder="12" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Info */}
-        <div className="form-row-3">
-          <div className="form-group">
-            <label htmlFor="category">Category</label>
-            <input type="text" id="category" name="category" value={productData.category} onChange={handleChange} placeholder="e.g. Hair" />
-          </div>
-          <div className="form-group">
-            <label htmlFor="rating">Avg Rating (1-5)</label>
-            <input type="number" id="rating" name="rating" value={productData.rating} onChange={handleChange} min="0" max="5" step="0.1" placeholder="4.5" />
-          </div>
-          <div className="form-group">
-            <label htmlFor="reviews_count">Reviews Count</label>
-            <input type="number" id="reviews_count" name="reviews_count" value={productData.reviews_count} onChange={handleChange} min="0" step="1" placeholder="228" />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description">Description *</label>
-          <textarea id="description" name="description" value={productData.description} onChange={handleChange} required rows="3" placeholder="Describe the product..."></textarea>
-        </div>
-
-        <div className="form-row-2">
-          <div className="form-group">
-            <label htmlFor="ingredients">Ingredients</label>
-            <textarea id="ingredients" name="ingredients" value={productData.ingredients} onChange={handleChange} rows="3" placeholder="List the ingredients..."></textarea>
-          </div>
-          <div className="form-group">
-            <label htmlFor="how_to_use">How To Use</label>
-            <textarea id="how_to_use" name="how_to_use" value={productData.how_to_use} onChange={handleChange} rows="3" placeholder="Instructions on how to use..."></textarea>
-          </div>
-        </div>
-
-        <div className="form-actions">
-          <button type="submit" className="publish-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Adding Product...' : <><PlusCircle size={18} /> Publish Product</>}
+        <nav className="sidebar-nav">
+          <button className="nav-item" onClick={() => navigate('/admin/dashboard')}>
+            <ArrowLeft size={20} />
+            <span>Back to Dashboard</span>
           </button>
+          <button className="nav-item active">
+            <PlusCircle size={20} />
+            <span>Add Product</span>
+          </button>
+        </nav>
+      </aside>
+
+      {/* ── Main ── */}
+      <main className="admin-main">
+        {/* Header */}
+        <header className="admin-header">
+          <div className="header-search">
+             <span style={{color: '#64748b', fontSize: '0.9rem', fontWeight: 500}}>Admin / Add Product</span>
+          </div>
+          <div className="header-profile">
+            <div className="profile-info">
+              <span className="profile-name">Admin</span>
+              <span className="profile-email">{user?.email || 'admin@example.com'}</span>
+            </div>
+            <div className="profile-avatar">{user?.email?.[0]?.toUpperCase() || 'A'}</div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="admin-content">
+          <div className="content-header">
+            <h1>Add New Product</h1>
+            <p style={{ color: '#64748b', marginTop: '4px' }}>Fill in the details to publish a new product to the catalog.</p>
+          </div>
+
+          <div className="data-table-container" style={{ padding: '24px', maxWidth: '800px', border: 'none', background: 'transparent' }}>
+            <form onSubmit={handleSubmit} className="admin-form">
+              
+              {/* Top Row: Image & Basic Info */}
+              <div className="form-row-2">
+                {/* Image Upload */}
+                <div className="form-group">
+                  <label>Product Image</label>
+                  <div className="image-upload-box" onClick={() => document.getElementById('image-upload').click()}>
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" />
+                    ) : (
+                      <div className="upload-placeholder">
+                        <Upload size={32} />
+                        <p>Click to upload image</p>
+                      </div>
+                    )}
+                    <input 
+                      type="file" id="image-upload" accept="image/*" 
+                      style={{ display: 'none' }} onChange={handleImageChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="basic-info-group">
+                  <div className="form-group">
+                    <label htmlFor="title">Product Title *</label>
+                    <input type="text" id="title" name="title" value={productData.title} onChange={handleChange} required placeholder="e.g. Advanced Hair Growth Actives" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="brand">Brand</label>
+                    <input type="text" id="brand" name="brand" value={productData.brand} onChange={handleChange} placeholder="e.g. Oziva" />
+                  </div>
+                  <div className="form-row-2">
+                    <div className="form-group">
+                      <label htmlFor="price">Price (₹) *</label>
+                      <input type="number" id="price" name="price" value={productData.price} onChange={handleChange} required min="0" step="0.01" placeholder="2099" />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="discount_percentage">Discount (%)</label>
+                      <input type="number" id="discount_percentage" name="discount_percentage" value={productData.discount_percentage} onChange={handleChange} min="0" max="100" step="1" placeholder="12" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Info */}
+              <div className="form-row-3">
+                <div className="form-group">
+                  <label htmlFor="category">Category</label>
+                  <input type="text" id="category" name="category" value={productData.category} onChange={handleChange} placeholder="e.g. Hair" />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="rating">Avg Rating (1-5)</label>
+                  <input type="number" id="rating" name="rating" value={productData.rating} onChange={handleChange} min="0" max="5" step="0.1" placeholder="4.5" />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="reviews_count">Reviews Count</label>
+                  <input type="number" id="reviews_count" name="reviews_count" value={productData.reviews_count} onChange={handleChange} min="0" step="1" placeholder="228" />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="description">Description *</label>
+                <textarea id="description" name="description" value={productData.description} onChange={handleChange} required rows="3" placeholder="Describe the product..."></textarea>
+              </div>
+
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label htmlFor="ingredients">Ingredients</label>
+                  <textarea id="ingredients" name="ingredients" value={productData.ingredients} onChange={handleChange} rows="3" placeholder="List the ingredients..."></textarea>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="how_to_use">How To Use</label>
+                  <textarea id="how_to_use" name="how_to_use" value={productData.how_to_use} onChange={handleChange} rows="3" placeholder="Instructions on how to use..."></textarea>
+                </div>
+              </div>
+
+              <div className="form-actions" style={{ marginTop: '32px' }}>
+                <button type="submit" className="publish-btn" disabled={isSubmitting}>
+                  {isSubmitting ? 'Adding Product...' : <><PlusCircle size={18} /> Publish Product</>}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      </main>
     </div>
   );
 };

@@ -16,10 +16,47 @@ const PLP = () => {
   const [sortBy, setSortBy] = useState('popularity');
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
+  const [selectedPrices, setSelectedPrices] = useState([]);
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
+
+  // Price ranges definition
+  const priceRanges = [
+    { label: 'Under ₹500',    key: 'under500',   min: 0,    max: 500 },
+    { label: '₹500 - ₹1000', key: '500to1000',  min: 500,  max: 1000 },
+    { label: '₹1000 - ₹2000',key: '1000to2000', min: 1000, max: 2000 },
+    { label: 'Over ₹2000',   key: 'over2000',   min: 2000, max: 999999 },
+  ];
+
+  const togglePrice = (key) => {
+    setSelectedPrices(prev =>
+      prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key]
+    );
+  };
+
+  const removePriceFilter = (key) => {
+    setSelectedPrices(prev => prev.filter(p => p !== key));
+  };
+
+  const clearAllFilters = () => {
+    setSelectedBrands([]);
+    setSelectedRatings([]);
+    setSelectedPrices([]);
+  };
+
+  const removeBrandFilter = (brand) => {
+    setSelectedBrands(prev => prev.filter(b => b !== brand));
+  };
+
+  const removeRatingFilter = (rating) => {
+    setSelectedRatings(prev => prev.filter(r => r !== rating));
+  };
+
+  const hasActiveFilters = selectedBrands.length > 0 || selectedRatings.length > 0 || selectedPrices.length > 0;
+
 
   useEffect(() => {
     fetchProducts();
-  }, [sortBy, selectedBrands, selectedRatings, categoryParam]);
+  }, [sortBy, selectedBrands, selectedRatings, selectedPrices, categoryParam]);
 
   const fetchProducts = async () => {
     try {
@@ -36,10 +73,12 @@ const PLP = () => {
       }
       
       if (selectedRatings.length > 0) {
-        // Simple implementation: if they select '4 Stars & Above', filter rating >= 4
         const minRating = Math.min(...selectedRatings);
         query = query.gte('rating', minRating);
       }
+
+      // Price filter: client-side post-fetch (Supabase OR range needs RPC; simpler to filter in JS)
+      // We'll fetch all and filter below
 
       // Apply Sorting
       if (sortBy === 'price_low') query = query.order('price', { ascending: true });
@@ -49,7 +88,18 @@ const PLP = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      setProducts(data || []);
+
+      let filtered = data || [];
+
+      // Apply price filter client-side (supports multi-range OR logic)
+      if (selectedPrices.length > 0) {
+        const activePriceRanges = priceRanges.filter(r => selectedPrices.includes(r.key));
+        filtered = filtered.filter(product =>
+          activePriceRanges.some(r => product.price >= r.min && product.price < r.max)
+        );
+      }
+
+      setProducts(filtered);
     } catch (error) {
       console.error('Error fetching products:', error);
       setProducts([]);
@@ -77,14 +127,17 @@ const PLP = () => {
         <div className="container">
           <div className="breadcrumb">
             <Link to="/">Home</Link>
-            {categoryParam && (
+            {categoryParam ? (
               <>
-                 {' > '}
-                 <Link to={`/?category=${encodeURIComponent(categoryParam)}`}>{categoryParam}</Link>
+                {' > '}
+                <span className="current">{categoryParam}</span>
+              </>
+            ) : (
+              <>
+                {' > '}
+                <span className="current">All Products</span>
               </>
             )}
-            {' > '}
-            <span className="current">All Products</span>
           </div>
           <h1 className="category-title">{categoryParam || 'All Products'} <span className="product-count">({products.length})</span></h1>
         </div>
@@ -108,21 +161,62 @@ const PLP = () => {
             </select>
           </div>
 
+          {/* Filters Applied Section */}
+          {hasActiveFilters && (
+            <div className="filter-group filters-applied-section">
+              <div className="filters-applied-header">
+                <h3 className="filter-title">Filters Applied</h3>
+                <button className="clear-all-btn" onClick={clearAllFilters}>Clear All</button>
+              </div>
+              <div className="applied-pills-container">
+                {selectedBrands.map(brand => (
+                  <div key={brand} className="applied-pill">
+                    {brand} <button className="remove-pill" onClick={() => removeBrandFilter(brand)}>×</button>
+                  </div>
+                ))}
+                {selectedRatings.map(rating => (
+                  <div key={`rating-${rating}`} className="applied-pill">
+                    {rating} Stars & Up <button className="remove-pill" onClick={() => removeRatingFilter(rating)}>×</button>
+                  </div>
+                ))}
+                {selectedPrices.map(key => {
+                  const range = priceRanges.find(r => r.key === key);
+                  return range ? (
+                    <div key={key} className="applied-pill">
+                      {range.label} <button className="remove-pill" onClick={() => removePriceFilter(key)}>×</button>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Brand Filter */}
           <div className="filter-group">
             <h3 className="filter-title">Brand</h3>
+            <div className="brand-search-container">
+              <input 
+                type="text" 
+                className="brand-search-input" 
+                placeholder="Search Brand" 
+                value={brandSearchQuery}
+                onChange={(e) => setBrandSearchQuery(e.target.value)}
+              />
+            </div>
             <div className="filter-options">
               {brands && brands.length > 0 ? (
-                brands.map(brand => (
-                  <label key={brand} className="checkbox-label">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedBrands.includes(brand)}
-                      onChange={() => toggleBrand(brand)}
-                    />
-                    {brand}
-                  </label>
-                ))
+                brands
+                  .filter(brand => brand.toLowerCase().includes(brandSearchQuery.toLowerCase()))
+                  .map(brand => (
+                    <label key={brand} className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedBrands.includes(brand)}
+                        onChange={() => toggleBrand(brand)}
+                      />
+                      {brand}
+                    </label>
+                  ))
               ) : (
                 <p style={{fontSize: '0.85rem', color: '#94a3b8'}}>No brands found</p>
               )}
@@ -149,11 +243,16 @@ const PLP = () => {
           <div className="filter-group">
             <h3 className="filter-title">Price</h3>
             <div className="filter-options">
-              {/* Dummy options to match UI */}
-              <label className="checkbox-label"><input type="checkbox" /> Under ₹500</label>
-              <label className="checkbox-label"><input type="checkbox" /> ₹500 - ₹1000</label>
-              <label className="checkbox-label"><input type="checkbox" /> ₹1000 - ₹2000</label>
-              <label className="checkbox-label"><input type="checkbox" /> Over ₹2000</label>
+              {priceRanges.map(range => (
+                <label key={range.key} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedPrices.includes(range.key)}
+                    onChange={() => togglePrice(range.key)}
+                  />
+                  {range.label}
+                </label>
+              ))}
             </div>
           </div>
         </aside>

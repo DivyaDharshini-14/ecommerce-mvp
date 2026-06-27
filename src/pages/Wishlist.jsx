@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useWishlistStore } from '../store/wishlistStore';
 import { useCartStore } from '../store/cartStore';
-import { ShoppingCart, Trash2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import './Wishlist.css';
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist } = useWishlistStore();
@@ -16,49 +17,58 @@ const Wishlist = () => {
 
   if (wishlist.length === 0) {
     return (
-      <div className="container animate-fade-in" style={{ textAlign: 'center', paddingTop: '100px' }}>
-        <h1 className="gradient-text" style={{ fontSize: '3rem', marginBottom: '20px' }}>Your Wishlist is Empty</h1>
-        <p className="subtitle" style={{ marginBottom: '40px' }}>Save items you like to view them later.</p>
-        <Link to="/" className="btn-primary">Explore Products</Link>
+      <div className="wishlist-empty">
+        <h1>Your Wishlist is Empty</h1>
+        <p>Save items you like to view them later.</p>
+        <Link to="/" className="btn-primary" style={{ display: 'inline-block', padding: '10px 20px', textDecoration: 'none', background: '#fc2779', color: 'white', borderRadius: '4px' }}>Explore Products</Link>
       </div>
     );
   }
 
   return (
-    <div className="container animate-fade-in" style={{ marginTop: '40px' }}>
-      <h1 className="gradient-text" style={{ fontSize: '2.5rem', marginBottom: '40px' }}>Your Wishlist</h1>
+    <div className="wishlist-page">
+      <h1 className="wishlist-title">My wishlist</h1>
       
-      <div className="product-grid">
-        {wishlist.map((product) => (
-          <div key={product.id} className="product-card glass-panel" style={{ position: 'relative' }}>
-            <div className="product-image-container">
-              <img src={product.image_url} alt={product.title} className="product-image" />
-              <button 
-                onClick={() => removeFromWishlist(product.id)}
-                style={{ 
-                  position: 'absolute', top: '16px', right: '16px', 
-                  background: 'rgba(10, 10, 12, 0.8)', color: 'var(--error)', 
-                  border: '1px solid var(--border-color)', borderRadius: '50%', 
-                  width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', zIndex: 10, transition: 'all 0.2s ease'
-                }}
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-            
-            <div className="product-info">
-              <Link to={`/product/${product.id}`} className="product-title" style={{ display: 'block' }}>
-                {product.title}
-              </Link>
-              <p className="product-price">${parseFloat(product.price).toFixed(2)}</p>
+      <div className="wishlist-grid">
+        {wishlist.map((product) => {
+          const originalPrice = product.price / (1 - (product.discount_percentage || 0) / 100);
+
+          return (
+            <div key={product.id} className="wishlist-card">
+              <div className="wishlist-image-container">
+                <img src={product.image_url} alt={product.title} className="wishlist-image" />
+                <button 
+                  className="wishlist-remove-btn"
+                  onClick={() => removeFromWishlist(product.id)}
+                  title="Remove"
+                >
+                  <X size={14} />
+                </button>
+              </div>
               
-              <button className="btn-primary add-to-cart-btn" onClick={() => handleMoveToCart(product)}>
-                <ShoppingCart size={18} /> Move to Cart
+              <div className="wishlist-info">
+                <p className="wishlist-brand">{product.brand || 'Brand Name'}</p>
+                <Link to={`/product/${product.id}`} className="wishlist-product-title">
+                  {product.title}
+                </Link>
+                
+                <div className="wishlist-price-row">
+                  <span className="wishlist-price">₹{Math.round(product.price).toLocaleString()}</span>
+                  {product.discount_percentage > 0 && (
+                    <>
+                      <span className="wishlist-old-price">₹{Math.round(originalPrice).toLocaleString()}</span>
+                      <span className="wishlist-discount">{Math.round(product.discount_percentage)}% Off</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              <button className="wishlist-move-btn" onClick={() => handleMoveToCart(product)}>
+                Move to Bag
               </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

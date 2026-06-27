@@ -6,9 +6,10 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   isAuthModalOpen: false,
   isLoading: true,
-  
-  openAuthModal: () => set({ isAuthModalOpen: true }),
-  closeAuthModal: () => set({ isAuthModalOpen: false }),
+  redirectAfterLogin: null,
+
+  openAuthModal: (redirectPath = null) => set({ isAuthModalOpen: true, redirectAfterLogin: redirectPath }),
+  closeAuthModal: () => set({ isAuthModalOpen: false, redirectAfterLogin: null }),
   
   initializeAuth: async () => {
     try {
@@ -29,9 +30,10 @@ export const useAuthStore = create((set, get) => ({
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      set({ isAuthModalOpen: false });
+      const redirect = get().redirectAfterLogin;
+      set({ isAuthModalOpen: false, redirectAfterLogin: null });
       toast.success('Successfully signed in!');
-      return { success: true };
+      return { success: true, redirect };
     } catch (error) {
       toast.error(error.message || 'Failed to sign in');
       return { success: false, error };

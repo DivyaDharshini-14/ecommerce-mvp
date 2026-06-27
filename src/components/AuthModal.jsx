@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import './AuthModal.css';
 
 const AuthModal = () => {
   const { isAuthModalOpen, closeAuthModal, signInWithEmail, signUpWithEmail } = useAuthStore();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,15 +17,15 @@ const AuthModal = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
     const cleanEmail = email.trim();
-    
     if (isLogin) {
-      await signInWithEmail(cleanEmail, password);
+      const result = await signInWithEmail(cleanEmail, password);
+      if (result.success && result.redirect) {
+        navigate(result.redirect);
+      }
     } else {
       await signUpWithEmail(cleanEmail, password);
     }
-    
     setLoading(false);
   };
 
